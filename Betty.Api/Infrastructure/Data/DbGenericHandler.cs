@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using Betty.Api.Infrastructure.Utils;
+using System.Linq.Expressions;
 
 namespace Betty.Api.Infrastructure.Data
 {
@@ -23,14 +24,21 @@ namespace Betty.Api.Infrastructure.Data
             return new CommandGenericHandler<T>(_connectionstring).RunInsert(model);
         }
 
-        public Task<IEnumerable<T>> Update<T>(T model, Expression<Func<T, bool>> where) where T : notnull, new()
+
+        public Task<int> Update<T>(T model, Expression<Func<T, bool>> where) where T : class, new()
         {
-            throw new NotImplementedException();
+            var query = new CommandGenericHandler<T>(_connectionstring);
+            query.Where(where);
+
+            return query.RunUpdate(model);
         }
 
         public Task<int> Delete<T>(Expression<Func<T, bool>> where, int rows = 1000) where T : class, new()
         {
-            throw new NotImplementedException();
+            var query = new CommandGenericHandler<T>(_connectionstring);
+            query.Where(where);
+
+            return query.RunDelete();
         }
 
         public object Clone() => new DbGenericHandler(_connectionstring);

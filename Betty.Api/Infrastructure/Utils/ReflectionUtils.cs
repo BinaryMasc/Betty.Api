@@ -9,7 +9,7 @@ using System.Reflection;
 #pragma warning disable CS8600 // Se va a convertir un literal nulo o un posible valor nulo en un tipo que no acepta valores NULL
 namespace Betty.Api.Infrastructure.Utils
 {
-    public class ReflectionUtils
+    public static class ReflectionUtils
     {
         public static void ExpressionToString<T>(Expression<Func<T, bool>> expression, ref string strExpression)
         {
@@ -35,10 +35,18 @@ namespace Betty.Api.Infrastructure.Utils
                     else if (typeLeft.Name == "LogicalBinaryExpression")
                         LogicalBinaryExpressionToString(expression, ref strExpression);
                     else ExpressionToString(body.Left, ref strExpression);
-                    //if (typeRight.Name == "PropertyExpression") break;
+
                     strExpression += GetNodeTypeString(body.NodeType.ToString());
+
                     if (typeRight.Name == "ConstantExpression")
                         strExpression += body.Right;
+                    else if (typeRight.Name == "FieldExpression" || typeRight.Name == "PropertyExpression")
+                    {
+                        var fieldName = body.Right.Member.Name;
+                        var dictionaryObject = typeRight.Name == "FieldExpression" ? ConvertObjectRuntimeFieldsToDictionary(body.Right.Expression.Value) : ConvertObjectRuntimeFieldsToDictionary(body.Right.Expression.Expression.Value);
+
+                        WriteValue(ref strExpression, (Type)body.Right.Type, dictionaryObject[fieldName]);
+                    }
                     else ExpressionToString(body.Right, ref strExpression);
                     break;
                 case "PropertyExpression":
@@ -46,6 +54,28 @@ namespace Betty.Api.Infrastructure.Utils
                     strExpression += body.Member.Name + "=1 ";
                     break;
             }
+        }
+
+        private static void WriteValue(ref string strExpression, Type type, object obj)
+        {
+            strExpression += SanitizeValue(type, obj);
+        }
+
+        private static string SanitizeValue(Type type, object obj)
+        {
+            string result = "";
+            if (type == typeof(string))
+                result = $"'{obj}'";
+
+            else if (type == typeof(DateTime))
+                result = $"'{((DateTime)obj).ToString("u").Split('Z')[0]}'";
+
+            else if (type == typeof(bool))
+                result += (bool)obj ? '1' : '0';
+
+            else result += obj;
+
+            return result;
         }
 
         private static string GetNodeTypeString(string nodeType)
@@ -127,10 +157,8 @@ namespace Betty.Api.Infrastructure.Utils
                 var dictionary = members.ToDictionary(property => property.Name, property => property.GetValue(din3.Value)).Where(name => name.Key == memberName);
 
 
-                if (dictionary.First().Value.GetType() == typeof(string))
-                    return "'" + dictionary.First().Value + "'";
+                return SanitizeValue(dictionary.First().Value.GetType(), dictionary.First().Value);
 
-                else return dictionary.First().Value;
             }
             //  Catch if its a FieldExpression
             catch(InvalidCastException)
@@ -146,7 +174,8 @@ namespace Betty.Api.Infrastructure.Utils
                 var dict = ConvertObjectRuntimeFieldsToDictionary(expresion3);
                 var dict2 = ConvertObjectRuntimePropertiesToDictionary(dict.Where(e => e.Key == objectname).Select(o => o.Value).FirstOrDefault());
 
-                return dict2[fieldName].GetType() == typeof(string) ? $"'{dict2[fieldName]}'" : dict2[fieldName];
+                return SanitizeValue(dict2[fieldName].GetType(), dict2[fieldName]);
+                //return dict2[fieldName].GetType() == typeof(string) ? $"'{dict2[fieldName]}'" : dict2[fieldName];
 
             }
         }
@@ -155,12 +184,10 @@ namespace Betty.Api.Infrastructure.Utils
 
         private static object GetRightOperandingExpression(ConstantExpression member)
         {
-            if (member?.Value?.GetType() == typeof(string))
-                return "'" + member.Value + "'";
-
-            else return member?.Value;
+            return SanitizeValue(member?.Value?.GetType(), member.Value);
         }
 
+        //  Called on insert command
         public static void GetNamesAndValuesFromObject<T>(T model, out IEnumerable<string> fieldNames, out IEnumerable<string?> fieldValues, IEnumerable<Type> AditionalAttributesToIgnore)
         {
             var modelReflection = model?.GetType();
@@ -171,7 +198,9 @@ namespace Betty.Api.Infrastructure.Utils
             fieldNames = properties.Select(p => p.Name);
             fieldValues = properties
                 .Select(p => p.GetValue(model))
-                .Select(v => v.GetType() == typeof(string) ? $"'{v}'" : (v.GetType() == typeof(bool) ? ((bool)v == true ? "1" : "0") : v.ToString()));
+                .Select(v => v.GetType() == typeof(string)  ? $"'{v.ToString().Replace("'", "''")}'" : 
+                v.GetType() == typeof(bool) ? (bool)v == true ? "1" : "0" :
+                v.GetType() == typeof(DateTime) ? $"'{((DateTime)v).ToString("u").Split('Z')[0]}'" : v.ToString());
         }
 
         static Dictionary<string, object> ConvertObjectRuntimePropertiesToDictionary(object obj)
@@ -184,7 +213,17 @@ namespace Betty.Api.Infrastructure.Utils
             // Recorremos las propiedades y las añadimos al diccionario
             foreach (var property in properties)
             {
-                dictionary[property.Name] = property.GetValue(obj);
+                var type = property.PropertyType;
+                var isClass = !type.IsPrimitive && type != typeof(string) && type != typeof(DateTime);
+
+                if (isClass)
+                {
+                    var auxDictionary = type.GetRuntimeProperties().Any() ? ConvertObjectRuntimePropertiesToDictionary(property.GetValue(obj)) : ConvertObjectRuntimeFieldsToDictionary(property.GetValue(obj));
+                    foreach (var pair in auxDictionary)
+                        dictionary[pair.Key] = pair.Value;
+                }
+                else
+                    dictionary[property.Name] = property.GetValue(obj);
             }
 
             return dictionary;
@@ -200,56 +239,46 @@ namespace Betty.Api.Infrastructure.Utils
             // Recorremos las propiedades y las añadimos al diccionario
             foreach (var field in fields)
             {
-                dictionary[field.Name] = field.GetValue(obj);
+                var type = field.FieldType;
+                var isClass = !type.IsPrimitive && type != typeof(string) && type != typeof(DateTime);
+
+                if(isClass)
+                {
+                    var auxDictionary = type.GetRuntimeProperties().Any() ? ConvertObjectRuntimePropertiesToDictionary(field.GetValue(obj)) : ConvertObjectRuntimeFieldsToDictionary(field.GetValue(obj));
+                    foreach (var pair in auxDictionary)
+                        dictionary[pair.Key] = pair.Value;
+                }
+                else
+                    dictionary[field.Name] = field.GetValue(obj);
             }
 
             return dictionary;
         }
 
-        public static ExpressionData DEPRECATEDGetDiscomposedExpression<T>(Expression < Func<T, bool> > expression)
+
+        public static Dictionary<string, object> ConvertToDictionary(object model, Func<PropertyInfo, bool> where = null)
         {
-            object? rightValue = new();
-            string leftFieldName = "";
-            string Operator = "";
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
 
-            dynamic body = expression.Body;
-            dynamic LeftType = body.Left.GetType();
-            dynamic RightType = body.Right.GetType();
-            Type typeBody = expression.Body.GetType();
+            var dictionary = new Dictionary<string, object>();
+            IEnumerable<PropertyInfo> properties;
 
-            ;
-            //  boolean
-            if (typeBody.Name == "PropertyExpression")
-                return new ExpressionData { Left = body.Member.Name, LinqExpressionType = expression.Body.GetType() };
+            if (where is null)
+                properties = model.GetType().GetProperties();
+            else
+                properties = model.GetType().GetProperties().Where(where);
 
-            if (typeBody.Name == "LogicalBinaryExpression")
-                throw new NotImplementedException("LogicalBinaryExpression Not supported for this method.");
-
-
-            try
+            foreach (PropertyInfo property in properties)
             {
-                //  If is a constant value
-                rightValue = body.Right.Value;
-            }
-            // if not...
-            catch (Exception)
-            {
-                ConstantExpression din3 = (ConstantExpression)body.Right.Expression;
-                var members = din3.Value?.GetType().GetFields() ?? throw new NullReferenceException("The expression has no fields.");
-                var dictionary = members.ToDictionary(property => property.Name, property => property.GetValue(din3.Value));
-                rightValue = dictionary[members[0].Name];
+                object value = property.GetValue(model);
+                if (value != null)
+                {
+                    dictionary.Add(property.Name, value);
+                }
             }
 
-            leftFieldName = body.Left.Member.Name;
-            Operator = body.Method.Name;
-
-            return new ExpressionData
-            {
-                Left = leftFieldName,
-                Right = rightValue,
-                Operator = Operator,
-                LinqExpressionType = expression.Body.GetType()
-            };
+            return dictionary;
         }
     }
 }

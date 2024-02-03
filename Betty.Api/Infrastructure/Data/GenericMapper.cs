@@ -41,7 +41,8 @@ namespace Betty.Api.Infrastructure.Data
 
                         if (ds.Tables[0].Columns.Contains(memberName))
                         {
-                            Helpers.SetProperty(tempT, memberName, ds.Tables[0].Rows[i][memberName]);
+                            var value = ds.Tables[0].Rows[i][memberName];
+                            Helpers.SetProperty(tempT, memberName, value.GetType() != typeof(DBNull) ? value : null);
                         }
                     }
                     modelT[i] = tempT;

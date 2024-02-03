@@ -79,5 +79,51 @@ namespace Betty.Api.Infrastructure.Data
             return modelList.AsEnumerable();
         }
 
+        public async Task<int> RunDelete()
+        {
+            if (wheres.Count > 0)
+                _where = BuildWhere(wheres);
+
+            var query =
+                $"Delete from {_tableName} \n" +
+                $"WHERE {_where} ";
+
+            using (MySqlConnection connection = new MySqlConnection(_connectionstring))
+            {
+                connection.Open();
+                using (MySqlCommand sqlCommand = new MySqlCommand(query, connection))
+                {
+                    return await sqlCommand.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        public async Task<int> RunUpdate(T model)
+        {
+
+            var attributesToIgnore = new List<Type>() { typeof(SqlIgnoreUpdateAttribute), typeof(SqlPrimaryKeyAttribute) };
+
+
+
+            ReflectionUtils.GetNamesAndValuesFromObject(model, out IEnumerable<string> fieldNames, out IEnumerable<string?> fieldValues, attributesToIgnore);
+
+
+
+            string sets = string.Join(", \n", fieldNames.Zip(fieldValues, (name, value) => $"{name}={value}"));
+
+            var query =
+                $"Update {_tableName} \n" +
+                $"SET {string.Join("\n,", sets)} \n" +
+                $"WHERE {_where} ";
+
+            using (MySqlConnection connection = new MySqlConnection(_connectionstring))
+            {
+                connection.Open();
+                using (MySqlCommand sqlCommand = new MySqlCommand(query, connection))
+                {
+                    return await sqlCommand.ExecuteNonQueryAsync();
+                }
+            }
+        }
     }
 }
