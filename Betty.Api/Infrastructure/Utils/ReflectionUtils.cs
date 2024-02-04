@@ -169,12 +169,11 @@ namespace Betty.Api.Infrastructure.Utils
                 string objectname = expresion2.Member.Name;
                 var propertiesReflected = member.Member.ReflectedType.GetProperties();
 
+                var typeRight = member.GetType();
+                var dictionaryObject = typeRight.Name == "FieldExpression" ? ConvertObjectRuntimeFieldsToDictionary(((dynamic)member.Expression).Value) : ConvertObjectRuntimeFieldsToDictionary(((dynamic)member.Expression).Expression.Value);
 
-                var expresion3 = ((ConstantExpression)expresion2.Expression).Value;
-                var dict = ConvertObjectRuntimeFieldsToDictionary(expresion3);
-                var dict2 = ConvertObjectRuntimePropertiesToDictionary(dict.Where(e => e.Key == objectname).Select(o => o.Value).FirstOrDefault());
 
-                return SanitizeValue(dict2[fieldName].GetType(), dict2[fieldName]);
+                return SanitizeValue(dictionaryObject[fieldName].GetType(), dictionaryObject[fieldName]);
                 //return dict2[fieldName].GetType() == typeof(string) ? $"'{dict2[fieldName]}'" : dict2[fieldName];
 
             }
@@ -218,7 +217,9 @@ namespace Betty.Api.Infrastructure.Utils
 
                 if (isClass)
                 {
-                    var auxDictionary = type.GetRuntimeProperties().Any() ? ConvertObjectRuntimePropertiesToDictionary(property.GetValue(obj)) : ConvertObjectRuntimeFieldsToDictionary(property.GetValue(obj));
+                    var value = property.GetValue(obj);
+                    if (value is null) continue;
+                    var auxDictionary = type.GetRuntimeProperties().Any() ? ConvertObjectRuntimePropertiesToDictionary(value) : ConvertObjectRuntimeFieldsToDictionary(value);
                     foreach (var pair in auxDictionary)
                         dictionary[pair.Key] = pair.Value;
                 }
@@ -244,7 +245,9 @@ namespace Betty.Api.Infrastructure.Utils
 
                 if(isClass)
                 {
-                    var auxDictionary = type.GetRuntimeProperties().Any() ? ConvertObjectRuntimePropertiesToDictionary(field.GetValue(obj)) : ConvertObjectRuntimeFieldsToDictionary(field.GetValue(obj));
+                    var value = field.GetValue(obj);
+                    if (value is null) continue;
+                    var auxDictionary = type.GetRuntimeProperties().Any() ? ConvertObjectRuntimePropertiesToDictionary(value) : ConvertObjectRuntimeFieldsToDictionary(value);
                     foreach (var pair in auxDictionary)
                         dictionary[pair.Key] = pair.Value;
                 }

@@ -53,7 +53,6 @@ namespace BettyApi.Models
 
     public class UserCredential
     {
-        [SqlPrimaryKeyAttribute] 
         public int UserCode { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }
