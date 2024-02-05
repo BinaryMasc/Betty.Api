@@ -22,8 +22,15 @@ create table `c_ProjectState`(
     `Name` VARCHAR(50)
 );
 
+create table `c_PermissionType`(
+	`Id` INT AUTO_INCREMENT PRIMARY KEY,
+    `Name` VARCHAR(50)
+);
+
+insert into `c_PermissionType`(Id, Name) Values(1, 'Admin');
+
 insert into `c_UserState`(Id, Name) Values(1, 'Enabled');
-insert into `c_UserState`(Id, Name) Values(2, 'Disable');
+insert into `c_UserState`(Id, Name) Values(2, 'Disabled');
 
 insert into `c_ProjectState`(Id, Name) Values(1, 'New');
 insert into `c_ProjectState`(Id, Name) Values(2, 'Active');
@@ -91,6 +98,24 @@ REFERENCES `User`(`UserId`);
 alter table `Project`ADD CONSTRAINT `fk_ProjectStateCode`
 FOREIGN KEY (`ProjectStateCode`)
 REFERENCES `c_ProjectState`(`Id`);
+
+create table`UserPermissionsByProject`(
+	`UserCode` INT,
+	`ProjectCode` INT,
+	`PermissionTypeCode` INT
+);
+
+alter table `UserPermissionsByProject`ADD CONSTRAINT `fk_UserPermissionsByProject_ProjectCode`
+FOREIGN KEY (`ProjectCode`)
+REFERENCES `Project`(`ProjectId`);
+
+alter table `UserPermissionsByProject`ADD CONSTRAINT `fk_UserPermissionsByProject_PermissionTypeCode`
+FOREIGN KEY (`PermissionTypeCode`)
+REFERENCES `c_PermissionType`(`Id`);
+
+alter table `UserPermissionsByProject`ADD CONSTRAINT `fk_UserPermissionsByProject_UserCode`
+FOREIGN KEY (`UserCode`)
+REFERENCES `User`(`UserId`);
 
 Create table `Epic`(
 	`EpicId` INT AUTO_INCREMENT PRIMARY KEY,
@@ -163,14 +188,13 @@ create table `Task`(
 	`TaskId` INT AUTO_INCREMENT PRIMARY KEY,
     `CreatedByUserCode` INT,
     `ModifiedByUserCode` INT,
+	`ResponsibleUserCode` INT,
 	`CreatedDateTime` DATETIME,
 	`ModifiedDateTime` DATETIME null,
     `ParentUserStoryCode` INT null,
     `ParentTaskCode` INT null,
     `Title` VARCHAR(50),
     `Text` VARCHAR(50),
-    `LastModified` datetime null,
-    `Created` datetime,
     `TaskStateCode` INT,
 	`ProjectCode` INT
 );

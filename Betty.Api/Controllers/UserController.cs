@@ -54,7 +54,7 @@ namespace Betty.Api.Controllers
             if (usrquery.Count() < 1) throw new Exception("Username or password wrong.");
 
             var userCredential = usrquery.First();
-            var user = (await _dbHandler.Query<User>(u => u.UserId == userCredential.UserCode)).FirstOrDefault();
+            User user = (await _dbHandler.Query<User>(u => u.UserId == userCredential.UserCode)).FirstOrDefault() ?? throw new Exception("User doesn't found.");
 
             return GenerateToken(user);
             throw new NotImplementedException();

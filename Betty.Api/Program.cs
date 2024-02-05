@@ -1,3 +1,5 @@
+using Betty.Api.Domain.Interfaces;
+using Betty.Api.Domain.Services;
 using Betty.Api.Infrastructure.Data;
 using BettyApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,7 +13,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-
 IConfiguration configuration = new ConfigurationBuilder()
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
             .AddJsonFile("appsettings.json")
@@ -20,12 +21,10 @@ IConfiguration configuration = new ConfigurationBuilder()
 string mySqlConnectionString = configuration.GetConnectionString("MySQLConnection");
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "You api title", Version = "v1" });
-    // Include 'SecurityScheme' to use JWT Authentication
     var jwtSecurityScheme = new OpenApiSecurityScheme
     {
         BearerFormat = "JWT",
@@ -52,12 +51,8 @@ builder.Services.AddSwaggerGen(c =>
 
 
 
-builder.Services.AddSingleton<IDbGenericHandler>(provider =>
-{
-    var connectionString = mySqlConnectionString;
-
-    return new DbGenericHandler(connectionString);
-});
+builder.Services.AddSingleton<IDbGenericHandler>(provider => new DbGenericHandler(mySqlConnectionString));
+builder.Services.AddSingleton<IPermissionsService>(provider => new PermissionsService(new DbGenericHandler(mySqlConnectionString)));
 
 
 // Get JWT configuration from IConfiguration
