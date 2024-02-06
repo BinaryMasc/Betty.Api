@@ -12,33 +12,31 @@ namespace BettyApi.Models
         public string Name { get; set; }
     }
 
-    public class c_UserStoryState : DictionaryBase
+    public abstract class RegistryBase
     {
+        [SqlIgnoreUpdate]
+        public int CreatedByUser { get; set; }
+        [SqlIgnoreInsert]
+        public int ModifiedByUser { get; set; }
+        [SqlIgnoreUpdate]
+        public DateTime CreatedDateTime { get; set; }
+        [SqlIgnoreInsert]
+        public DateTime ModifiedDateTime { get; set; }
     }
 
-    public class c_TaskState : DictionaryBase
-    {
-    }
+    public class c_UserStoryState : DictionaryBase { }
 
-    public class c_TaskRelationType : DictionaryBase
-    {
-    }
+    public class c_TaskState : DictionaryBase { }
 
-    public class c_UserState : DictionaryBase
-    {
-    }
+    public class c_TaskRelationType : DictionaryBase { }
 
-    public class c_TaskUserStoryRelatedType : DictionaryBase
-    {
-    }
+    public class c_UserState : DictionaryBase { }
 
-    public class c_UserStoryPriority : DictionaryBase
-    {
-    }
+    public class c_TaskUserStoryRelatedType : DictionaryBase { }
 
-    public class c_ProjectState : DictionaryBase
-    {
-    }
+    public class c_UserStoryPriority : DictionaryBase { }
+
+    public class c_ProjectState : DictionaryBase { }
 
     public class User
     {
@@ -58,49 +56,29 @@ namespace BettyApi.Models
         public string Password { get; set; }
     }
 
-    public class Project
+    public class Project : RegistryBase
     {
         [SqlPrimaryKeyAttribute]
         public int ProjectId { get; set; }
-        [SqlIgnoreUpdate]
-        public int CreatedByUser { get; set; }
-        [SqlIgnoreInsert]
-        public int ModifiedByUser { get; set; }
-        [SqlIgnoreUpdate]
-        public DateTime CreatedDateTime { get; set; }
-        [SqlIgnoreInsert]
-        public DateTime ModifiedDateTime { get; set; }
         public string Title { get; set; }
         public string Text { get; set; }
         public int ProjectStateCode { get; set; }
     }
 
-    public class Epic
+    public class Epic : RegistryBase
     {
         [SqlPrimaryKeyAttribute]
         public int EpicId { get; set; }
-        public int CreatedByUser { get; set; }
-        [SqlIgnoreInsert]
-        public int ModifiedByUser { get; set; }
-        public DateTime CreatedDateTime { get; set; }
-        [SqlIgnoreInsert]
-        public DateTime? ModifiedDateTime { get; set; }
         public string Title { get; set; }
         public string Text { get; set; }
         public int UserStoryStateCode { get; set; }
         public int ProjectCode { get; set; }
     }
 
-    public class UserStory
+    public class UserStory : RegistryBase
     {
         [SqlPrimaryKeyAttribute]
         public int UserStoryId { get; set; }
-        public int CreatedByUser { get; set; }
-        [SqlIgnoreInsert]
-        public int ModifiedByUser { get; set; }
-        public DateTime CreatedDateTime { get; set; }
-        [SqlIgnoreInsert]
-        public DateTime? ModifiedDateTime { get; set; }
         public string Title { get; set; }
         public string Text { get; set; }
         public int UserStoryPriorityCode { get; set; }
@@ -118,33 +96,16 @@ namespace BettyApi.Models
 
     }
 
-    public class Task
+    public class Task : RegistryBase
     {
         [SqlPrimaryKeyAttribute]
         public int TaskId { get; set; }
-        public int CreatedByUserCode { get; set; }
-        public int ModifiedByUserCode { get; set; }
         public int ResponsibleUserCode { get; set; }
-        public DateTime CreatedDateTime { get; set; }
-        public DateTime ModifiedDateTime { get; set; }
         public int ParentUserStoryCode { get; set; }
-        public int ParentTaskCode { get; set; }
         public string Title { get; set; }
         public string Text { get; set; }
         public int TaskStateCode { get; set; }
         public int ProjectCode { get; set; }
-        //[SqlIgnoreAttribute]
-        //public User CreatedBy { get; set; }
-        //[SqlIgnoreAttribute]
-        //public User ModifiedBy { get; set; }
-        //[SqlIgnoreAttribute]
-        //public UserStory ParentUserStory { get; set; }
-        //[SqlIgnoreAttribute]
-        //public Task ParentTask { get; set; }
-        //[SqlIgnoreAttribute]
-        //public c_TaskState TaskState { get; set; }
-        //[SqlIgnoreAttribute]
-        //public Project Project { get; set; }
     }
 
     public class TaskRelatedByTask
@@ -153,12 +114,6 @@ namespace BettyApi.Models
         public int TaskParentCode { get; set; }
         public int TaskCode { get; set; }
         public int TaskRelationTypeCode { get; set; }
-        //[SqlIgnoreAttribute]
-        //public Task TaskParent { get; set; }
-        //[SqlIgnoreAttribute]
-        //public Task Task { get; set; }
-        //[SqlIgnoreAttribute]
-        //public c_TaskRelationType TaskRelationType { get; set; }
     }
 
     public class TaskRelatedByUserStory
@@ -167,11 +122,5 @@ namespace BettyApi.Models
         public int UserStoryParentCode { get; set; }
         public int TaskChildCode { get; set; }
         public int TaskRelationTypeCode { get; set; }
-        //[SqlIgnoreAttribute]
-        //public UserStory UserStoryParent { get; set; }
-        //[SqlIgnoreAttribute]
-        //public Task TaskChild { get; set; }
-        //[SqlIgnoreAttribute]
-        //public c_TaskRelationType TaskRelationType { get; set; }
     }
 }

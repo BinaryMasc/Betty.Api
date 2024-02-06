@@ -27,6 +27,15 @@ create table `c_PermissionType`(
     `Name` VARCHAR(50)
 );
 
+create table `c_TaskUserStoryRelatedType`(
+	`Id` INT AUTO_INCREMENT PRIMARY KEY,
+    `Name` VARCHAR(50)
+);
+create table `c_UserStoryPriority`(
+	`Id` INT AUTO_INCREMENT PRIMARY KEY,
+    `Name` VARCHAR(50)
+);
+
 insert into `c_PermissionType`(Id, Name) Values(1, 'Admin');
 
 insert into `c_UserState`(Id, Name) Values(1, 'Enabled');
@@ -47,15 +56,12 @@ insert into `c_UserStoryState`(Id, Name) Values(2, 'Active');
 insert into `c_UserStoryState`(Id, Name) Values(3, 'Review');
 insert into `c_UserStoryState`(Id, Name) Values(4, 'Closed');
 
+insert into `c_UserStoryPriority`(Id, Name) Values(1, 'Optional');
+insert into `c_UserStoryPriority`(Id, Name) Values(2, 'Moderately Important');
+insert into `c_UserStoryPriority`(Id, Name) Values(3, 'Important');
+insert into `c_UserStoryPriority`(Id, Name) Values(4, 'Critical');
 
-create table `c_TaskUserStoryRelatedType`(
-	`Id` INT AUTO_INCREMENT PRIMARY KEY,
-    `Name` VARCHAR(50)
-);
-create table `c_UserStoryPriority`(
-	`Id` INT AUTO_INCREMENT PRIMARY KEY,
-    `Name` VARCHAR(50)
-);
+
 
 
 create table `User`(
@@ -186,13 +192,12 @@ REFERENCES `Epic`(`EpicId`);
 
 create table `Task`(
 	`TaskId` INT AUTO_INCREMENT PRIMARY KEY,
-    `CreatedByUserCode` INT,
-    `ModifiedByUserCode` INT,
+    `CreatedByUser` INT,
+    `ModifiedByUser` INT,
 	`ResponsibleUserCode` INT,
 	`CreatedDateTime` DATETIME,
 	`ModifiedDateTime` DATETIME null,
     `ParentUserStoryCode` INT null,
-    `ParentTaskCode` INT null,
     `Title` VARCHAR(50),
     `Text` VARCHAR(50),
     `TaskStateCode` INT,
@@ -208,10 +213,6 @@ REFERENCES `User`(`UserId`);
 alter table `Task`ADD CONSTRAINT `fk_ParentUserStoryCode`
 FOREIGN KEY (`ParentUserStoryCode`)
 REFERENCES `UserStory`(`UserStoryId`);
-
-alter table `Task`ADD CONSTRAINT `fk_ParentTaskCode`
-FOREIGN KEY (`ParentTaskCode`)
-REFERENCES `Task`(`TaskId`);
 
 alter table `Task`ADD CONSTRAINT `fk_TaskProjectCode`
 FOREIGN KEY (`ProjectCode`)

@@ -66,7 +66,7 @@ namespace Betty.Api.Controllers
             _ = await _permissionsService.HasPermissions(_userFromContext.UserId, task.ProjectCode);
 
             task.CreatedDateTime = DateTime.Now;
-            task.CreatedByUserCode = _userFromContext.UserId;
+            task.CreatedByUser = _userFromContext.UserId;
 
             return await _dbHandler.Insert(task);
         }
@@ -84,7 +84,7 @@ namespace Betty.Api.Controllers
             _ = await _permissionsService.HasPermissions(_userFromContext.UserId, TaskQuery.ProjectCode);
 
             Task.ModifiedDateTime = DateTime.Now;
-            Task.ModifiedByUserCode = _userFromContext.UserId;
+            Task.ModifiedByUser = _userFromContext.UserId;
             Task.ProjectCode = TaskQuery.ProjectCode;
             Task.ParentUserStoryCode = TaskQuery.ParentUserStoryCode;
 

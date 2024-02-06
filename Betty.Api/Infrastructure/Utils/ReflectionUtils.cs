@@ -122,8 +122,18 @@ namespace Betty.Api.Infrastructure.Utils
                 else ExpressionToString(body.Left, ref strExpression);
             }
             strExpression += GetNodeTypeString(body.NodeType.ToString());
-            if (typeRight.Name == "ConstantExpression")
+            if (typeRight.Name == "LogicalBinaryExpression")
+                LogicalBinaryExpressionToString(body.Left, ref strExpression);
+            else if (typeRight.Name == "ConstantExpression")
                 strExpression += body.Right + ")";
+            else if (typeRight.Name == "FieldExpression" || typeRight.Name == "PropertyExpression")
+            {
+                var fieldName = body.Right.Member.Name;
+                var dictionaryObject = typeRight.Name == "FieldExpression" ? ConvertObjectRuntimeFieldsToDictionary(body.Right.Expression.Value) : ConvertObjectRuntimeFieldsToDictionary(body.Right.Expression.Expression.Value);
+
+                WriteValue(ref strExpression, (Type)body.Right.Type, dictionaryObject[fieldName]);
+                strExpression += ")";
+            }
             else ExpressionToString(body.Right, ref strExpression);
         }
 
