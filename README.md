@@ -18,6 +18,7 @@ docker run --name betty-db --network betty-network -p 3306:3306 -e MYSQL_ROOT_PA
 ```
 
 4. Execute the required commands in **sql_scheme.sql** in the sql interpreter
+
 **Powershell:**
 ```Bash	
 Get-Content sql_scheme.sql | docker exec -i betty-db mysql -uroot -pmy-secret-pw
