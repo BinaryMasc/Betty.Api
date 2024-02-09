@@ -1,4 +1,4 @@
-name: Docker Image CI/CD
+name: Docker Image CI
 
 on:
   push:
@@ -8,29 +8,19 @@ on:
 
 jobs:
 
-  build_and_deploy:
+  build:
 
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v3
-
-    - name: Build the Docker image
-      run: |
-        TAG=$(date +%s)
-        docker build . --file Dockerfile --tag betty-api-image:$TAG
-
-    - name: Save Docker image to a file
-      run: docker save betty-api-image:$(date +%s) > betty-api.tar
-
-    - name: Deploy to server
-      uses: appleboy/ssh-action@master
+    - uses: actions/checkout@v3
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v3
       with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
-        script: |
-          docker load < betty-api.tar
-          docker run -d --name betty-api-container -p 8080:8080 betty-api-image:$(date +%s)
+        dotnet-version: '6.0.x' # Replace with your dotnet version
+    - name: Publish dotnet
+      run: dotnet publish -c Release -o publish
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+    - name: Run the Docker image
+      run: docker run -p 5000:5000 my-image-name:$(date +%s)
