@@ -21,6 +21,6 @@ jobs:
     - name: Publish dotnet
       run: dotnet publish -c Release -o publish
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      run: docker build -t betty-api .
     - name: Run the Docker image
-      run: docker run -p 5000:5000 my-image-name:$(date +%s)
+      run: docker run -d -p 5000:5000 betty-api
