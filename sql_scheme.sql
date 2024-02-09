@@ -82,6 +82,10 @@ create table `UserCredential`(
     `Password` VARCHAR(64)
 );
 
+--	QA Test
+Insert into `User`(Username,Name,Lastname,Email) Values("admin", "admin", "admin", "admin");
+Insert Into `UserCredential`(UserCode, Username, Password) Values(1, "admin", '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918');
+
 Create table `Project`(
 	`ProjectId` INT AUTO_INCREMENT PRIMARY KEY,
 	`CreatedByUser` INT,
@@ -204,10 +208,10 @@ create table `Task`(
 	`ProjectCode` INT
 );
 alter table `Task`ADD CONSTRAINT `fk_CreatedByUserCode`
-FOREIGN KEY (`CreatedByUserCode`)
+FOREIGN KEY (`CreatedByUser`)
 REFERENCES `User`(`UserId`);
 alter table `Task`ADD CONSTRAINT `fk_ModifiedByUserCode`
-FOREIGN KEY (`ModifiedByUserCode`)
+FOREIGN KEY (`ModifiedByUser`)
 REFERENCES `User`(`UserId`);
 
 alter table `Task`ADD CONSTRAINT `fk_ParentUserStoryCode`

@@ -12,16 +12,20 @@ docker network create betty-network
 docker pull mysql
 ```
 
-3. To create db image
+3. Run db image
 ```Bash
 docker run --name betty-db --network betty-network -p 3306:3306 -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql
 ```
-or, if you want to keep the data save:
-```Bash
-docker run --name betty-db --network betty-network -p 3306:3306 -e MYSQL_ROOT_PASSWORD=my-secret-pw -v C:\Users\User\ANYTHING\bettydatabase:/var/lib/mysql -d mysql
-```
 
 4. Execute the required commands in **sql_scheme.sql** in the sql interpreter
+**Powershell:**
+```Bash	
+Get-Content sql_scheme.sql | docker exec -i betty-db mysql -uroot -pmy-secret-pw
+```
+**Linux:**
+```Bash	
+cat sql_scheme.sql | docker exec -i betty-db mysql -uroot -pmy-secret-pw
+```
 
 5. Execute build command in the container folder
 ```Bash
