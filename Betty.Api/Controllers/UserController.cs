@@ -31,7 +31,7 @@ namespace Betty.Api.Controllers
         }
 
         [HttpGet("GetUsers")]
-        public Task<IEnumerable<User>> GetUsers()
+        public Task<SqlResultCollection<User>> GetUsers()
         {
             var usr = Utils.GetUserFromContext(User);
             return _dbHandler.Query<User>(u => u.UserStateCode == 1);

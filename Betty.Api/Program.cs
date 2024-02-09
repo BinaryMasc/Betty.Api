@@ -53,6 +53,7 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddSingleton<IDbGenericHandler>(provider => new DbGenericHandler(mySqlConnectionString));
 builder.Services.AddSingleton<IPermissionsService>(provider => new PermissionsService(new DbGenericHandler(mySqlConnectionString)));
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 
 // Get JWT configuration from IConfiguration

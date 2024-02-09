@@ -8,8 +8,11 @@ namespace Betty.Api.Infrastructure.Utils
 {
     public static class Utils
     {
-        public static User? GetUserFromContext(ClaimsPrincipal User) => 
-            JsonConvert.DeserializeObject<User>(User.Claims.FirstOrDefault(c => c.Type == typeof(User).ToString())?.Value ?? throw new Exception("Deserialization error: Invalid Token."));
+        public static User GetUserFromContext(ClaimsPrincipal User)
+        {
+            var u = JsonConvert.DeserializeObject<User>(User.Claims.FirstOrDefault(c => c.Type == typeof(User).ToString())?.Value ?? throw new Exception("Deserialization error: Invalid Token."));
+            return u ?? throw new Exception("Deserialization error: Invalid Token.");
+        }
 
         public static string GetHash(string str)
         {

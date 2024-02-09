@@ -11,12 +11,28 @@ namespace Betty.Api.Infrastructure.Data
             _connectionstring = connectionstring;
         }
 
-        public Task<IEnumerable<T>> Query<T>(Expression<Func<T,bool>> where, int rows = 1000) where T : class, new()
+        public Task<SqlResultCollection<T>> Query<T>(Expression<Func<T, bool>> where) where T : class, new()
         {
             var query = new CommandGenericHandler<T>(_connectionstring);
             query.Where(where);
 
-            return query.RunQuery(rows);
+            return query.RunQuery(1000, true, false);
+        }
+
+        public Task<SqlResultCollection<T>> Query<T>(Expression<Func<T,bool>> where, bool isInternalQuery = true, bool executeQuery = false, int rows = 1000) where T : class, new()
+        {
+            var query = new CommandGenericHandler<T>(_connectionstring);
+            query.Where(where);
+
+            return query.RunQuery(rows, executeQuery, isInternalQuery);
+        }
+
+        public Task<SqlResultCollection<T>> Query<T>(Expression<Func<T, bool>> where, bool isInternalQuery = true, int rows = 1000) where T : class, new()
+        {
+            var query = new CommandGenericHandler<T>(_connectionstring);
+            query.Where(where);
+
+            return query.RunQuery(rows, !isInternalQuery, isInternalQuery);
         }
 
         public Task<int> Insert<T>(T model) where T : class, new()
@@ -50,5 +66,6 @@ namespace Betty.Api.Infrastructure.Data
 
             return await query.RunQuery(1000);
         }
+
     }
 }

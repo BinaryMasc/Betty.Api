@@ -48,7 +48,7 @@ namespace Betty.Api.Infrastructure.Data
             }
         }
 
-        public async Task<IEnumerable<T>> RunQuery(int rows = 100)
+        public async Task<SqlResultCollection<T>> RunQuery(int rows = 1000, bool executeQuery = true, bool isInternalQuery = false)
         {
 
             var modelList = new T[] { };
@@ -58,10 +58,15 @@ namespace Betty.Api.Infrastructure.Data
 
             var query =
                 $"SELECT \n" +
-                $"{_fields} \n" +
+                //  If its internal query, {HYPOTHETICAL FIELDS PENDING} will be replaced by the fields called in the expression
+                $"{(isInternalQuery ? "{HYPOTHETICAL FIELDS PENDING}" : _fields)} \n" + 
                 $"FROM {_tableName}\n" +
                 $"{(string.IsNullOrEmpty(_where) ? "" : $"WHERE {_where} ")} \n" +
-                $"LIMIT {rows}";
+                $"{(executeQuery && rows > -1 ? $"LIMIT {rows}" : "")}";
+
+            //  If it's internal query, is not necesary to execute in this call
+            if (isInternalQuery || !executeQuery)
+                return new SqlResultCollection<T>(new List<T>() { }) { Query = query };
 
 
             using (MySqlConnection connection = new MySqlConnection(_connectionstring))
@@ -76,7 +81,13 @@ namespace Betty.Api.Infrastructure.Data
                 }
                 connection.Close();
             }
-            return modelList.AsEnumerable();
+
+            var result = new SqlResultCollection<T>(modelList.AsEnumerable());
+            result.Query = query;
+
+
+
+            return result;
         }
 
         public async Task<int> RunDelete()

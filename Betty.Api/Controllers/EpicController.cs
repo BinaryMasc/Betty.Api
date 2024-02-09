@@ -41,7 +41,7 @@ namespace Betty.Api.Controllers
         [HttpPost("CreateEpic")]
         public async Task<int> CreateEpic(Epic epic)
         {
-            var _userFromContext = Utils.GetUserFromContext(User) ?? throw new Exception("Invalid token or not deserializable.");
+            var _userFromContext = Utils.GetUserFromContext(User);
             _ = await _permissionsService.HasPermissions(_userFromContext.UserId, epic.ProjectCode);
 
 
@@ -57,7 +57,7 @@ namespace Betty.Api.Controllers
         [HttpPost("UpdateEpic")]
         public async Task<int> UpdateEpic(Epic epic)
         {
-            var _userFromContext = Utils.GetUserFromContext(User) ?? throw new Exception("Invalid token or not deserializable.");
+            var _userFromContext = Utils.GetUserFromContext(User);
             _ = await _permissionsService.HasPermissions(_userFromContext.UserId, epic.ProjectCode);
 
             if (epic.Title is null || epic.Text is null)

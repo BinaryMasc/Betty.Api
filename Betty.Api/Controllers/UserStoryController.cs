@@ -16,11 +16,13 @@ namespace Betty.Api.Controllers
         private readonly ILogger<UserStoryController> _logger;
         private readonly IDbGenericHandler _dbHandler;
         private readonly IPermissionsService _permissionsService;
-        public UserStoryController(ILogger<UserStoryController> logger, IDbGenericHandler dbHandler, IPermissionsService permissionsService)
+        private readonly ITaskService _taskService;
+        public UserStoryController(ILogger<UserStoryController> logger, IDbGenericHandler dbHandler, IPermissionsService permissionsService, ITaskService taskService)
         {
             _logger = logger;
             _dbHandler = dbHandler;
             _permissionsService = permissionsService;
+            _taskService = taskService;
         }
 
         [HttpGet("GetUserStoriesByEpic")]
@@ -43,7 +45,7 @@ namespace Betty.Api.Controllers
         [HttpPost("CreateUserStory")]
         public async Task<int> CreateUserStory(UserStory userStory)
         {
-            User _userFromContext = Utils.GetUserFromContext(User) ?? throw new Exception("Invalid token or not deserializable.");
+            User _userFromContext = Utils.GetUserFromContext(User);
             _ = await _permissionsService.HasPermissions(_userFromContext.UserId, userStory.ProjectCode);
 
 
@@ -59,7 +61,7 @@ namespace Betty.Api.Controllers
         [HttpPost("UpdateUserStory")]
         public async Task<int> UpdateUserStory(UserStory userStory)
         {
-            User _userFromContext = Utils.GetUserFromContext(User) ?? throw new Exception("Invalid token or not deserializable.");
+            User _userFromContext = Utils.GetUserFromContext(User);
 
             if (userStory.Title is null || userStory.Text is null)
                 throw new Exception("Fields cannot be null.");
@@ -74,6 +76,20 @@ namespace Betty.Api.Controllers
             userStory.EpicCode = userStoryQuery.EpicCode;
 
             return await _dbHandler.Update(userStory, p => p.UserStoryId == userStory.UserStoryId);
+        }
+
+        [HttpGet("RemoveUS")]
+        public async Task<int> RemoveUS(int usId)
+        {
+            User _userFromContext = Utils.GetUserFromContext(User);
+
+            var usQuery = (await _dbHandler.Query<UserStory>(e => e.UserStoryId == usId)).FirstOrDefault() ?? throw new Exception("US to remove doesn't found.");
+            _ = await _permissionsService.HasPermissions(_userFromContext.UserId, usQuery.ProjectCode);
+
+            //  remove related tasks
+            //_ = await _taskService.RemoveTask();
+
+            return await _dbHandler.Delete<UserStory>(p => p.UserStoryId == usId);
         }
     }
 }

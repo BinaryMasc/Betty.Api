@@ -1,4 +1,5 @@
 ﻿using Betty.Api.Domain.Interfaces;
+using Betty.Api.Domain.Services;
 using Betty.Api.Infrastructure.Data;
 using Betty.Api.Infrastructure.Utils;
 using BettyApi.Models;
@@ -15,11 +16,13 @@ namespace Betty.Api.Controllers
         private readonly ILogger<TaskController> _logger;
         private readonly IDbGenericHandler _dbHandler;
         private readonly IPermissionsService _permissionsService;
-        public TaskController(ILogger<TaskController> logger, IDbGenericHandler dbHandler, IPermissionsService permissionsService)
+        private readonly ITaskService _taskService;
+        public TaskController(ILogger<TaskController> logger, IDbGenericHandler dbHandler, IPermissionsService permissionsService, ITaskService taskService)
         {
             _logger = logger;
             _dbHandler = dbHandler;
             _permissionsService = permissionsService;
+            _taskService = taskService;
         }
 
         [HttpGet("GetTasksByUS")]
@@ -58,7 +61,7 @@ namespace Betty.Api.Controllers
         [HttpPost("CreateTask")]
         public async Task<int> CreateTask(BettyApi.Models.Task task)
         {
-            var _userFromContext = Utils.GetUserFromContext(User) ?? throw new Exception("Invalid token or not deserializable.");
+            var _userFromContext = Utils.GetUserFromContext(User);
 
             if (task.Title is null || task.Text is null)
                 throw new Exception("Fields cannot be null.");
@@ -74,7 +77,7 @@ namespace Betty.Api.Controllers
         [HttpPost("UpdateTask")]
         public async Task<int> UpdateTask(BettyApi.Models.Task Task)
         {
-            var _userFromContext = Utils.GetUserFromContext(User) ?? throw new Exception("Invalid token or not deserializable.");
+            var _userFromContext = Utils.GetUserFromContext(User);
 
             if (Task.Title is null || Task.Text is null)
                 throw new Exception("Fields cannot be null.");
@@ -90,5 +93,9 @@ namespace Betty.Api.Controllers
 
             return await _dbHandler.Update(Task, p => p.TaskId == Task.TaskId);
         }
+
+        [HttpGet("RemoveTask")]
+        public async Task<int> RemoveTask(int taskId) => await _taskService.RemoveTask(t => t.TaskId == taskId, User);
+        
     }
 }

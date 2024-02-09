@@ -24,7 +24,7 @@ namespace Betty.Api.Controllers
         }
 
         [HttpGet("GetProjects")]
-        public Task<IEnumerable<Project>> GetProjects(int projectState)
+        public Task<SqlResultCollection<Project>> GetProjects(int projectState)
         {
             return _dbHandler.Query<Project>(p => p.ProjectStateCode == projectState);
         }
@@ -39,7 +39,7 @@ namespace Betty.Api.Controllers
         [HttpPost("CreateProject")]
         public async Task<int> CreateProject(Project project)
         {
-            var _userFromContext = Utils.GetUserFromContext(User) ?? throw new Exception("Invalid token or not deserializable.");
+            var _userFromContext = Utils.GetUserFromContext(User);
 
             if (project.Title is null || project.Text is null)
                 throw new Exception("Fields cannot be null.");
@@ -64,7 +64,7 @@ namespace Betty.Api.Controllers
         [HttpPost("UpdateProject")]
         public async Task<int> UpdateProject(Project project)
         {
-            var _userFromContext = Utils.GetUserFromContext(User) ?? throw new Exception("Invalid token or not deserializable.");
+            var _userFromContext = Utils.GetUserFromContext(User);
             _ = await _permissionsService.HasPermissions(_userFromContext.UserId, project.ProjectId);
             if (project.Title is null || project.Text is null)
                 throw new Exception("Fields cannot be null.");

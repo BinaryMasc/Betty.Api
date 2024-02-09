@@ -1,4 +1,5 @@
-﻿using Betty.Api.Infrastructure.Data.Attributes;
+﻿using Betty.Api.Infrastructure.Data;
+using Betty.Api.Infrastructure.Data.Attributes;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -53,6 +54,23 @@ namespace Betty.Api.Infrastructure.Utils
                     //  Assuming the property is bool in C# and bit in sql
                     strExpression += body.Member.Name + "=1 ";
                     break;
+                case "MethodCallExpression2":
+                    if(body.Method.Name == "Any")
+                    {
+
+                        //  Reference to a SqlResultCollection object in the internal expression
+                        dynamic fieldExpression = ((IEnumerable<dynamic>)body.Arguments).FirstOrDefault(a => a.GetType().Name == "FieldExpression");
+                        Dictionary<string, object> internalQuery = ConvertObjectRuntimeFieldsToDictionary(fieldExpression.Expression.Value);
+
+                        dynamic internalExpression = ((IEnumerable<dynamic>)body.Arguments).FirstOrDefault(a => a.GetType().Name == "Expression1`1");
+                        string fieldNameToQuery = internalExpression.Body.Left.Member.Name;
+                        string fieldNameToEvaluate = internalExpression.Body.Right.Member.Name;
+                        strExpression += $"{fieldNameToEvaluate} IN ({internalQuery.Where(e => e.Key == "Query").Select(e => e.Value).FirstOrDefault().ToString().Replace("{HYPOTHETICAL FIELDS PENDING}", fieldNameToQuery)})";
+                        
+                        ;
+                    }
+                    break;
+                default: throw new Exception("This expression doesn't supported.");
             }
         }
 
@@ -269,7 +287,7 @@ namespace Betty.Api.Infrastructure.Utils
         }
 
 
-        public static Dictionary<string, object> ConvertToDictionary(object model, Func<PropertyInfo, bool> where = null)
+        public static Dictionary<string, object> ConvertToDictionary(object model, Func<PropertyInfo, bool> where)
         {
             if (model == null)
                 throw new ArgumentNullException(nameof(model));
