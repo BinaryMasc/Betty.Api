@@ -25,7 +25,7 @@ builder.Services.AddControllers(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "You api title", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Betty.Api", Version = "v1" });
     var jwtSecurityScheme = new OpenApiSecurityScheme
     {
         BearerFormat = "JWT",
