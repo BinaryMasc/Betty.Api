@@ -19,7 +19,6 @@ public class GlobalExceptionFilter : IExceptionFilter
         var exception = context.Exception;
         var statusCode = 500; // Internal Server Error
 
-        // You can handle different types of exceptions differently
         if (exception is UnauthorizedAccessException)
         {
             statusCode = 401; // Unauthorized

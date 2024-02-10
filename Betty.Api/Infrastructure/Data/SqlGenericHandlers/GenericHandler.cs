@@ -17,7 +17,6 @@ namespace Betty.Api.Infrastructure.Data
         protected Type _type;
         protected string _where;
 
-        //protected Dictionary<string, object?> _dataFields;
         protected List<WhereClause> wheres = new List<WhereClause>();
 
         protected void Initialize()

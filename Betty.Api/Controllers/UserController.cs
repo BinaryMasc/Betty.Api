@@ -18,8 +18,6 @@ namespace Betty.Api.Controllers
     [Route("[controller]")]
     public class UserController : ControllerBase
     {
-        
-
         private readonly ILogger<UserController> _logger;
         private readonly IDbGenericHandler _dbHandler;
         private readonly IConfiguration _configuration;
@@ -96,7 +94,10 @@ namespace Betty.Api.Controllers
                 UserCode = userCreated.FirstOrDefault()?.UserId ?? throw new UnexpectedDbException("User created hasn't returned data.")
             };
 
-            return await _dbHandler.Insert(usrCredentials);
+            var rowsAffected = await _dbHandler.Insert(usrCredentials);
+            if (rowsAffected > 0) _logger.LogInformation($"User created {user.UserId} - {user.Username} - {user.Email}");
+
+            return rowsAffected;
         }
 
         private string GenerateToken(User user)
