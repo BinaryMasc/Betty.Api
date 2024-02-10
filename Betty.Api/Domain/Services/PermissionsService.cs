@@ -18,7 +18,7 @@ namespace Betty.Api.Domain.Services
 
             if (projectPermissions.Count() < 1)
             {
-                return throwException ? throw new Exception("This user does not have permissions for this project.") : false;
+                return throwException ? throw new UnauthorizedAccessException("This user does not have permissions for this project.") : false;
             }
             else return true;
         }

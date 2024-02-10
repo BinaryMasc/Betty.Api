@@ -1,6 +1,7 @@
 ﻿using Betty.Api.Domain.Interfaces;
 using Betty.Api.Domain.Services;
 using Betty.Api.Infrastructure.Data;
+using Betty.Api.Infrastructure.Exceptions;
 using Betty.Api.Infrastructure.Utils;
 using BettyApi.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -37,7 +38,7 @@ namespace Betty.Api.Controllers
         [HttpGet("GetUserStory")]
         public async Task<UserStory> GetUserStory(int userStoryId)
         {
-            var us = (await _dbHandler.Query<UserStory>(p => p.UserStoryId == userStoryId)).FirstOrDefault() ?? throw new Exception("The UserStory doesn't exist.");
+            var us = (await _dbHandler.Query<UserStory>(p => p.UserStoryId == userStoryId)).FirstOrDefault() ?? throw new ItemNotFoundException("The UserStory doesn't exist.");
             _ = await _permissionsService.HasPermissions(Utils.GetUserFromContext(User)?.UserId ?? 0, us.ProjectCode);
             return us;
         }
@@ -50,7 +51,7 @@ namespace Betty.Api.Controllers
 
 
             if (userStory.Title is null || userStory.Text is null)
-                throw new Exception("Fields cannot be null.");
+                throw new ArgumentNullException("Fields cannot be null.");
 
             userStory.CreatedDateTime = DateTime.Now;
             userStory.CreatedByUser = _userFromContext.UserId;
@@ -64,15 +65,15 @@ namespace Betty.Api.Controllers
             User _userFromContext = Utils.GetUserFromContext(User);
 
             if (userStory.Title is null || userStory.Text is null)
-                throw new Exception("Fields cannot be null.");
+                throw new ArgumentNullException("Fields cannot be null.");
 
-            UserStory userStoryQuery = (await _dbHandler.Query<UserStory>(e => e.UserStoryId == userStory.UserStoryId))?.FirstOrDefault() ?? throw new Exception("UserStory to update doesn't found.");
+            UserStory userStoryQuery = (await _dbHandler.Query<UserStory>(e => e.UserStoryId == userStory.UserStoryId))?.FirstOrDefault() ?? throw new ItemNotFoundException("UserStory to update doesn't found.");
 
             _ = await _permissionsService.HasPermissions(_userFromContext.UserId, userStoryQuery?.ProjectCode ?? -1);
 
             userStory.ModifiedDateTime = DateTime.Now;
             userStory.ModifiedByUser = _userFromContext.UserId;
-            userStory.ProjectCode = userStoryQuery?.ProjectCode ?? throw new Exception("ProjectCode cannot be null.");
+            userStory.ProjectCode = userStoryQuery?.ProjectCode ?? throw new ArgumentNullException("ProjectCode cannot be null.");
             userStory.EpicCode = userStoryQuery.EpicCode;
 
             return await _dbHandler.Update(userStory, p => p.UserStoryId == userStory.UserStoryId);
@@ -83,7 +84,7 @@ namespace Betty.Api.Controllers
         {
             User _userFromContext = Utils.GetUserFromContext(User);
 
-            var usQuery = (await _dbHandler.Query<UserStory>(e => e.UserStoryId == usId)).FirstOrDefault() ?? throw new Exception("US to remove doesn't found.");
+            var usQuery = (await _dbHandler.Query<UserStory>(e => e.UserStoryId == usId)).FirstOrDefault() ?? throw new ItemNotFoundException("US to remove doesn't found.");
             _ = await _permissionsService.HasPermissions(_userFromContext.UserId, usQuery.ProjectCode);
 
             //  remove related tasks

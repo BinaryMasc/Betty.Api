@@ -1,12 +1,10 @@
 using Betty.Api.Domain.Interfaces;
 using Betty.Api.Domain.Services;
 using Betty.Api.Infrastructure.Data;
-using BettyApi.Models;
+using Betty.Api.Infrastructure.Exceptions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Configuration;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,7 +18,10 @@ IConfiguration configuration = new ConfigurationBuilder()
 
 string mySqlConnectionString = configuration.GetConnectionString("MySQLConnection");
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(typeof(GlobalExceptionFilter));
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -52,7 +53,7 @@ builder.Services.AddSwaggerGen(c =>
 
 
 builder.Services.AddSingleton<IDbGenericHandler>(provider => new DbGenericHandler(mySqlConnectionString));
-builder.Services.AddSingleton<IPermissionsService>(provider => new PermissionsService(new DbGenericHandler(mySqlConnectionString)));
+builder.Services.AddSingleton<IPermissionsService, PermissionsService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 
 

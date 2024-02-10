@@ -8,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Newtonsoft.Json;
 using Betty.Api.Infrastructure.Utils;
+using Betty.Api.Infrastructure.Exceptions;
 
 namespace Betty.Api.Controllers
 {
@@ -51,10 +52,10 @@ namespace Betty.Api.Controllers
             var hashPsw = Utils.GetHash(pUser.Password);
             var usrquery = await _dbHandler.Query<UserCredential>(u => u.Username == pUser.Username && u.Password == hashPsw);
 
-            if (usrquery.Count() < 1) throw new Exception("Username or password wrong.");
+            if (usrquery.Count() < 1) throw new UnauthorizedAccessException("incorrect username or password.");
 
             var userCredential = usrquery.First();
-            User user = (await _dbHandler.Query<User>(u => u.UserId == userCredential.UserCode)).FirstOrDefault() ?? throw new Exception("User doesn't found.");
+            User user = (await _dbHandler.Query<User>(u => u.UserId == userCredential.UserCode)).FirstOrDefault() ?? throw new ItemNotFoundException("User doesn't found.");
 
             return GenerateToken(user);
             throw new NotImplementedException();
@@ -68,21 +69,21 @@ namespace Betty.Api.Controllers
 
             if (queryResult.Count() > 0)
             {
-                throw new Exception("This username is already exist.");
+                throw new ValidationException("This username is already exist.");
             }
 
             var queryResult2 = await _dbHandler.Query<User>(u => u.Email == user.Email);
 
             if (queryResult2.Count() > 0)
             {
-                throw new Exception("This Email is already exist.");
+                throw new ValidationException("This Email is already exist.");
             }
 
             var hashPsw = Utils.GetHash(password);
             
 
             if (await _dbHandler.Insert(user) != 1)
-                throw new Exception("Error creating the user " + user.Username);
+                throw new UnexpectedDbException("Error creating the user " + user.Username);
 
             var userCreated = await _dbHandler.Query<User>(u => u.Username == user.Username);
 
@@ -92,7 +93,7 @@ namespace Betty.Api.Controllers
             {
                 Password = hashPsw,
                 Username = user.Username,
-                UserCode = userCreated.FirstOrDefault()?.UserId ?? throw new Exception("User created hasn't returned data.")
+                UserCode = userCreated.FirstOrDefault()?.UserId ?? throw new UnexpectedDbException("User created hasn't returned data.")
             };
 
             return await _dbHandler.Insert(usrCredentials);

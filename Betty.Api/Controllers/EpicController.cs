@@ -1,10 +1,12 @@
 ﻿using Betty.Api.Domain.Interfaces;
 using Betty.Api.Domain.Services;
 using Betty.Api.Infrastructure.Data;
+using Betty.Api.Infrastructure.Exceptions;
 using Betty.Api.Infrastructure.Utils;
 using BettyApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Data.Common;
 
 namespace Betty.Api.Controllers
 {
@@ -33,7 +35,7 @@ namespace Betty.Api.Controllers
         [HttpGet("GetEpic")]
         public async Task<Epic> GetEpic(int epicId)
         {
-            Epic epic = (await _dbHandler.Query<Epic>(p => p.EpicId == epicId)).FirstOrDefault() ?? throw new Exception("The epic doesn't exist.");
+            Epic epic = (await _dbHandler.Query<Epic>(p => p.EpicId == epicId)).FirstOrDefault() ?? throw new ItemNotFoundException("The epic doesn't exist.");
             _ = await _permissionsService.HasPermissions(Utils.GetUserFromContext(User)?.UserId ?? 0, epic.ProjectCode);
             return epic;
         }
@@ -46,7 +48,7 @@ namespace Betty.Api.Controllers
 
 
             if (epic.Title is null || epic.Text is null)
-                throw new Exception("Fields cannot be null.");
+                throw new ArgumentNullException("Fields cannot be null.");
 
             epic.CreatedDateTime = DateTime.Now;
             epic.CreatedByUser = _userFromContext.UserId;
@@ -61,9 +63,9 @@ namespace Betty.Api.Controllers
             _ = await _permissionsService.HasPermissions(_userFromContext.UserId, epic.ProjectCode);
 
             if (epic.Title is null || epic.Text is null)
-                throw new Exception("Fields cannot be null.");
+                throw new ArgumentNullException("Fields cannot be null.");
 
-            var epicquery = (await _dbHandler.Query<Epic>(e => e.EpicId == epic.EpicId)).FirstOrDefault() ?? throw new Exception("Epic to update doesn't found.");
+            var epicquery = (await _dbHandler.Query<Epic>(e => e.EpicId == epic.EpicId)).FirstOrDefault() ?? throw new UnexpectedDbException("Epic to update doesn't found.");
 
             epic.ModifiedDateTime = DateTime.Now;
             epic.ModifiedByUser = _userFromContext.UserId;

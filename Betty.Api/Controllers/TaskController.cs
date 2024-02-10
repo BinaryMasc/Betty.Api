@@ -1,6 +1,7 @@
 ﻿using Betty.Api.Domain.Interfaces;
 using Betty.Api.Domain.Services;
 using Betty.Api.Infrastructure.Data;
+using Betty.Api.Infrastructure.Exceptions;
 using Betty.Api.Infrastructure.Utils;
 using BettyApi.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -30,7 +31,7 @@ namespace Betty.Api.Controllers
         {
             var queryTasks = await _dbHandler.Query<BettyApi.Models.Task>(e => e.ParentUserStoryCode == userStory);
 
-            if (!queryTasks.Any()) throw new Exception("UserStory doestn't found or haven't permissions.");
+            if (!queryTasks.Any()) throw new ItemNotFoundException("UserStory doestn't found or haven't permissions.");
 
             _ = await _permissionsService.HasPermissions(Utils.GetUserFromContext(User)?.UserId ?? 0, queryTasks.FirstOrDefault()?.ProjectCode ?? -1);
 
@@ -42,7 +43,7 @@ namespace Betty.Api.Controllers
         {
             var queryTasks = await _dbHandler.Query<BettyApi.Models.Task>(e => e.ResponsibleUserCode == userId);
 
-            if (!queryTasks.Any()) throw new Exception("Tasks doestn't found or haven't permissions.");
+            if (!queryTasks.Any()) throw new ItemNotFoundException("Tasks doestn't found or haven't permissions.");
 
             _ = await _permissionsService.HasPermissions(Utils.GetUserFromContext(User)?.UserId ?? 0, queryTasks.FirstOrDefault()?.ProjectCode ?? -1);
 
@@ -52,7 +53,7 @@ namespace Betty.Api.Controllers
         [HttpGet("GetTask")]
         public async Task<BettyApi.Models.Task> GetTask(int taskId)
         {
-            BettyApi.Models.Task task = (await _dbHandler.Query<BettyApi.Models.Task>(p => p.TaskId == taskId)).FirstOrDefault() ?? throw new Exception("The Task doesn't exist.");
+            BettyApi.Models.Task task = (await _dbHandler.Query<BettyApi.Models.Task>(p => p.TaskId == taskId)).FirstOrDefault() ?? throw new ItemNotFoundException("The Task doesn't exist.");
 
             _ = await _permissionsService.HasPermissions(Utils.GetUserFromContext(User)?.UserId ?? 0, task.ProjectCode);
             return task;
@@ -64,7 +65,7 @@ namespace Betty.Api.Controllers
             var _userFromContext = Utils.GetUserFromContext(User);
 
             if (task.Title is null || task.Text is null)
-                throw new Exception("Fields cannot be null.");
+                throw new NullReferenceException("Fields cannot be null.");
 
             _ = await _permissionsService.HasPermissions(_userFromContext.UserId, task.ProjectCode);
 
@@ -80,9 +81,9 @@ namespace Betty.Api.Controllers
             var _userFromContext = Utils.GetUserFromContext(User);
 
             if (Task.Title is null || Task.Text is null)
-                throw new Exception("Fields cannot be null.");
+                throw new NullReferenceException("Fields cannot be null.");
 
-            var TaskQuery = (await _dbHandler.Query<BettyApi.Models.Task>(e => e.TaskId == Task.TaskId)).FirstOrDefault() ?? throw new Exception("Task to update doesn't found.");
+            var TaskQuery = (await _dbHandler.Query<BettyApi.Models.Task>(e => e.TaskId == Task.TaskId)).FirstOrDefault() ?? throw new ItemNotFoundException("Task to update doesn't found.");
 
             _ = await _permissionsService.HasPermissions(_userFromContext.UserId, TaskQuery.ProjectCode);
 

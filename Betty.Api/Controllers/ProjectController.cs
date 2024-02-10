@@ -1,5 +1,6 @@
 ﻿using Betty.Api.Domain.Interfaces;
 using Betty.Api.Infrastructure.Data;
+using Betty.Api.Infrastructure.Exceptions;
 using Betty.Api.Infrastructure.Utils;
 using BettyApi.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -33,7 +34,7 @@ namespace Betty.Api.Controllers
         public async Task<Project> GetProject(int projectId)
         {
             //_ = await _permissionsService.HasPermissions(Utils.GetUserFromContext(User)?.UserId ?? 0, projectId);
-            return (await _dbHandler.Query<Project>(p => p.ProjectId == projectId)).FirstOrDefault() ?? throw new Exception("The project doesn't exist.");
+            return (await _dbHandler.Query<Project>(p => p.ProjectId == projectId)).FirstOrDefault() ?? throw new ItemNotFoundException("The project doesn't exist.");
         }
 
         [HttpPost("CreateProject")]
@@ -42,14 +43,14 @@ namespace Betty.Api.Controllers
             var _userFromContext = Utils.GetUserFromContext(User);
 
             if (project.Title is null || project.Text is null)
-                throw new Exception("Fields cannot be null.");
+                throw new ArgumentNullException("Fields cannot be null.");
 
             project.CreatedDateTime = DateTime.Now;
             project.CreatedByUser = _userFromContext.UserId;
 
             //  Insert project before for create after the permissions
-            if (await _dbHandler.Insert(project) < 1) throw new Exception("Error: the project wasn't inserted.");
-            Project projectCreated = (await _dbHandler.Query<Project>(p => p.CreatedByUser == _userFromContext.UserId)).OrderByDescending(p => p.ProjectId).FirstOrDefault() ?? throw new Exception("Project tried inserted but doesn't found");
+            if (await _dbHandler.Insert(project) < 1) throw new UnexpectedDbException("Error: the project wasn't inserted.");
+            Project projectCreated = (await _dbHandler.Query<Project>(p => p.CreatedByUser == _userFromContext.UserId)).OrderByDescending(p => p.ProjectId).FirstOrDefault() ?? throw new UnexpectedDbException("Project tried inserted but doesn't found");
 
             //  Now create permissions and return affected rows (1)
             return await _dbHandler.Insert(new UserPermissionsByProject
@@ -67,7 +68,7 @@ namespace Betty.Api.Controllers
             var _userFromContext = Utils.GetUserFromContext(User);
             _ = await _permissionsService.HasPermissions(_userFromContext.UserId, project.ProjectId);
             if (project.Title is null || project.Text is null)
-                throw new Exception("Fields cannot be null.");
+                throw new ArgumentNullException("Fields cannot be null.");
 
             project.ModifiedDateTime = DateTime.Now;
             project.ModifiedByUser = _userFromContext.UserId;

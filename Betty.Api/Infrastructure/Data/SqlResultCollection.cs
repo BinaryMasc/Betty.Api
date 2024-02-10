@@ -17,7 +17,7 @@ namespace Betty.Api.Infrastructure.Data
         // Implement GetEnumerator method for IEnumerable<T>
         public IEnumerator<T> GetEnumerator()
         {
-            return items.GetEnumerator();
+            return items?.GetEnumerator() ?? throw new Exception("items property of SqlResultCollection<T> null.");
         }
 
         // Implement IEnumerable.GetEnumerator explicitly
@@ -30,7 +30,7 @@ namespace Betty.Api.Infrastructure.Data
         // Add additional methods as needed
         public void Add(T item)
         {
-            items.Add(item);
+            items?.Add(item); 
         }
     }
 }
