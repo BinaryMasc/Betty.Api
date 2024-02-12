@@ -66,11 +66,26 @@ namespace Betty.Api.Infrastructure.Utils
                         string fieldNameToQuery = internalExpression.Body.Left.Member.Name;
                         string fieldNameToEvaluate = internalExpression.Body.Right.Member.Name;
                         strExpression += $"{fieldNameToEvaluate} IN ({internalQuery.Where(e => e.Key == "Query").Select(e => e.Value).FirstOrDefault().ToString().Replace("{HYPOTHETICAL FIELDS PENDING}", fieldNameToQuery)})";
-                        
-                        ;
                     }
                     break;
-                default: throw new Exception("This expression doesn't supported.");
+
+                case "InstanceMethodCallExpression1":
+                    //  Exceptions that doesn't use WriteValue or SanitizeValue functions
+                    Dictionary<string, object> objectArguments = ConvertObjectRuntimeFieldsToDictionary(body.Arguments[0].Expression.Value);
+
+                    if (body.Method.Name == "Contains")
+                        strExpression += body.Object.Member.Name + $" LIKE '%{objectArguments.Select(e => e.Value).FirstOrDefault().ToString().Replace("'", "''").Replace("%", "")}%'";
+
+                    else if (body.Method.Name == "StartsWith")
+                        strExpression += body.Object.Member.Name + $" LIKE '{objectArguments.Select(e => e.Value).FirstOrDefault().ToString().Replace("'", "''").Replace("%", "")}%'";
+
+                    else if (body.Method.Name == "EndsWith")
+                        strExpression += body.Object.Member.Name + $" LIKE '%{objectArguments.Select(e => e.Value).FirstOrDefault().ToString().Replace("'", "''").Replace("%", "")}'";
+
+                    else throw new Exception($"This expression with method '{body.Method.Name}' isn't supported.");
+
+                    break;
+                default: throw new Exception("This expression isn't supported.");
             }
         }
 
