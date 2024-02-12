@@ -68,10 +68,10 @@ namespace Betty.Api.Controllers
         }
 
         [HttpGet("AutocompleteProject")]
-        public Task<SqlResultCollection<Project>> AutocompleteProject(string projectName) => _dbHandler.Query<Project>(p => p.Title.StartsWith(projectName));
+        public Task<Dictionary<string, object>[]> AutocompleteProject(string projectName) => _dbHandler.Query<Project, object>(p => p.Title.StartsWith(projectName), p => new { p.ProjectId, p.Title });
         
         [HttpGet("SearchProject")]
-        public Task<SqlResultCollection<Project>> SearchProject(string projectName) => _dbHandler.Query<Project>(p => p.Title.Contains(projectName));
+        public Task<Dictionary<string, object>[]> SearchProject(string projectName) => _dbHandler.Query<Project, object>(p => p.Title.Contains(projectName), p => new { p.ProjectId, p.Title });
         
 
     }
