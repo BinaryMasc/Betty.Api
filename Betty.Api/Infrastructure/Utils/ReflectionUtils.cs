@@ -273,6 +273,12 @@ namespace Betty.Api.Infrastructure.Utils
             return dictionary;
         }
 
+        public static IEnumerable<string> GetMembersFromExpression<R, Result>(Expression<Func<R, Result>> expression)
+        {
+            NewExpression expressionDetail = (NewExpression)expression.Body;
+            return expressionDetail.Members?.Select(m => m.Name) ?? throw new Exception("Invalid expression to evaluate.");
+        }
+
         static Dictionary<string, object> ConvertObjectRuntimeFieldsToDictionary(object obj)
         {
             var dictionary = new Dictionary<string, object>();

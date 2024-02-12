@@ -29,17 +29,10 @@ namespace Betty.Api.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet("GetUsers")]
-        public Task<SqlResultCollection<User>> GetUsers()
-        {
-            var usr = Utils.GetUserFromContext(User);
-            return _dbHandler.Query<User>(u => u.UserStateCode == 1);
-        }
-
         [HttpGet("GetUserInfoById")]
         public async Task<object> GetUserInfoById(int id)
         {
-            return (await _dbHandler.Query<User>(u => u.UserStateCode == 1 && u.UserId == id)).FirstOrDefault() ?? new object();
+            return (await _dbHandler.Query<User>(u => u.UserStateCode != 2 && u.UserId == id)).FirstOrDefault() ?? new object();
         }
 
         [AllowAnonymous]
@@ -53,11 +46,18 @@ namespace Betty.Api.Controllers
             if (usrquery.Count() < 1) throw new UnauthorizedAccessException("incorrect username or password.");
 
             var userCredential = usrquery.First();
-            User user = (await _dbHandler.Query<User>(u => u.UserId == userCredential.UserCode)).FirstOrDefault() ?? throw new ItemNotFoundException("User doesn't found.");
+            User user = (await _dbHandler.Query<User>(u => u.UserId == userCredential.UserCode)).FirstOrDefault() ?? throw new ItemNotFoundException("User not found.");
 
             return GenerateToken(user);
             throw new NotImplementedException();
         }
+
+
+        [HttpGet("AutocompleteUser")]
+        public Task<Dictionary<string, object>[]> AutocompleteUser(string userName) => _dbHandler.Query<User, object>(u => u.Username.StartsWith(userName), u => new { u.Username, u.Name });
+
+        [HttpGet("SearchUser")]
+        public Task<Dictionary<string, object>[]> SearchUser(string userName) => _dbHandler.Query<User, object>(p => p.Username.Contains(userName), u => new { u.Username, u.Name });
 
         [AllowAnonymous]
         [HttpPost("CreateUser")]
@@ -99,6 +99,12 @@ namespace Betty.Api.Controllers
 
             return rowsAffected;
         }
+
+        //[HttpGet("GetUsers")]
+        //public Task<SqlResultCollection<User>> GetUsers()
+        //{
+        //    return _dbHandler.Query<User>(u => u.UserStateCode != 2);
+        //}
 
         private string GenerateToken(User user)
         {

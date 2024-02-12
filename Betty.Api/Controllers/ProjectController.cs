@@ -5,7 +5,6 @@ using Betty.Api.Infrastructure.Utils;
 using BettyApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Mysqlx.Crud;
 
 namespace Betty.Api.Controllers
 {
@@ -24,16 +23,9 @@ namespace Betty.Api.Controllers
             _permissionsService = permissionsService;
         }
 
-        [HttpGet("GetProjects")]
-        public Task<SqlResultCollection<Project>> GetProjects(int projectState)
-        {
-            return _dbHandler.Query<Project>(p => p.ProjectStateCode == projectState);
-        }
-
         [HttpGet("GetProject")]
         public async Task<Project> GetProject(int projectId)
         {
-            //_ = await _permissionsService.HasPermissions(Utils.GetUserFromContext(User)?.UserId ?? 0, projectId);
             return (await _dbHandler.Query<Project>(p => p.ProjectId == projectId)).FirstOrDefault() ?? throw new ItemNotFoundException("The project doesn't exist.");
         }
 
@@ -59,7 +51,6 @@ namespace Betty.Api.Controllers
                 ProjectCode = projectCreated.ProjectId,
                 UserCode = _userFromContext.UserId
             });
-
         }
 
         [HttpPost("UpdateProject")]
@@ -75,6 +66,13 @@ namespace Betty.Api.Controllers
 
             return await _dbHandler.Update(project, p => p.ProjectId == project.ProjectId);
         }
+
+        [HttpGet("AutocompleteProject")]
+        public Task<SqlResultCollection<Project>> AutocompleteProject(string projectName) => _dbHandler.Query<Project>(p => p.Title.StartsWith(projectName));
+        
+        [HttpGet("SearchProject")]
+        public Task<SqlResultCollection<Project>> SearchProject(string projectName) => _dbHandler.Query<Project>(p => p.Title.Contains(projectName));
+        
 
     }
 }

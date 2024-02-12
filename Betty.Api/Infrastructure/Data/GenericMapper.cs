@@ -25,9 +25,6 @@ namespace Betty.Api.Infrastructure.Data
                     adapter.Fill(ds, tableName);
                 });
 
-                //if (ds.Tables[0].Rows.Count < 1)
-                //    throw new DataNotFoundException("The query didn't return data.");
-
 
                 modelT = new T[ds.Tables[0].Rows.Count];
 
@@ -54,7 +51,35 @@ namespace Betty.Api.Infrastructure.Data
             return modelT;
         }
 
+        public async Task<Dictionary<string, object>[]> MapObjectsFromQueryAsync(MySqlDataAdapter adapter, string tableName)
+        {
+            using (var ds = new DataSet())
+            {
+                await Task.Run(() =>
+                {
+                    adapter.Fill(ds, tableName);
+                });
+
+                var result = new Dictionary<string, object>[ds.Tables[0].Rows.Count];
+
+                for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                {
+                    var row = ds.Tables[0].Rows[i];
+                    var dict = new Dictionary<string, object>();
+
+                    foreach (DataColumn col in ds.Tables[0].Columns)
+                    {
+                        dict[col.ColumnName] = row[col.ColumnName];
+                    }
+
+                    result[i] = dict;
+                }
+
+                return result;
+            }
+        }
+
 
     }
 }
-#pragma warning restore CS8604 // Posible argumento de referencia nulo
+#pragma warning restore CS8604 
