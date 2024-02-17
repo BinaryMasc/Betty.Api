@@ -6,6 +6,7 @@ using Betty.Api.Infrastructure.Utils;
 using BettyApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Mysqlx.Crud;
 using System.Data.Common;
 
 namespace Betty.Api.Controllers
@@ -72,6 +73,20 @@ namespace Betty.Api.Controllers
             epic.ProjectCode = epicquery.ProjectCode;
 
             return await _dbHandler.Update(epic, p => p.EpicId == epic.EpicId);
+        }
+
+        [HttpGet("AutocompleteEpic")]
+        public Task<Dictionary<string, object>[]> AutocompleteEpic(string epicName, int projectId)
+        {
+            _ = _permissionsService.HasPermissions(Utils.GetUserFromContext(User).UserId, projectId);
+            return _dbHandler.Query<Epic, object>(p => p.Title.StartsWith(epicName) && p.ProjectCode == projectId, p => new { p.EpicId, p.Title }, rows: 10);
+        }
+
+        [HttpGet("SearchEpic")]
+        public async Task<Dictionary<string, object>[]> SearchEpic(string epicName, int projectId)
+        {
+            _ = await _permissionsService.HasPermissions(Utils.GetUserFromContext(User).UserId, projectId);
+            return await _dbHandler.Query<Epic, object>(p => p.Title.Contains(epicName) && p.ProjectCode == projectId, p => new { p.EpicId, p.Title }, rows: 10);
         }
     }
 }

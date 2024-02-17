@@ -92,5 +92,19 @@ namespace Betty.Api.Controllers
 
             return await _dbHandler.Delete<UserStory>(p => p.UserStoryId == usId);
         }
+
+        [HttpGet("AutocompleteUS")]
+        public async Task<Dictionary<string, object>[]> AutocompleteUS(string UsName, int projectId)
+        {
+            _ = await _permissionsService.HasPermissions(Utils.GetUserFromContext(User).UserId, projectId);
+            return await _dbHandler.Query<UserStory, object>(p => p.Title.StartsWith(UsName) && p.ProjectCode == projectId, p => new { p.UserStoryId, p.Title }, rows: 10);
+        }
+
+        [HttpGet("SearchUS")]
+        public async Task<Dictionary<string, object>[]> SearchUS(string UsName, int projectId)
+        {
+            _ = await _permissionsService.HasPermissions(Utils.GetUserFromContext(User).UserId, projectId);
+            return await _dbHandler.Query<UserStory, object>(p => p.Title.Contains(UsName) && p.ProjectCode == projectId, p => new { p.UserStoryId, p.Title }, rows: 10);
+        }
     }
 }

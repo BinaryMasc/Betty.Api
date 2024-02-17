@@ -1,7 +1,4 @@
 ﻿using Betty.Api.Infrastructure.Data.Attributes;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
 #pragma warning disable CS8618
 namespace BettyApi.Models
 {
